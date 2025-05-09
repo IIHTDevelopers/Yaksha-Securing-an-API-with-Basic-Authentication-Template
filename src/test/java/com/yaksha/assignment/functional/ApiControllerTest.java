@@ -32,33 +32,38 @@ public class ApiControllerTest {
 	public void testHandleSuccess() throws Exception {
 		String apiUrl = "https://reqres.in/api/users/2"; // A valid URL that requires basic authentication
 
-		// Declare boolean flags to track each assertion result
 		boolean statusOk = false;
 		boolean containsSuccessMessage = false;
 
 		try {
-			// Perform the GET request to authenticate API with basic authentication (200
-			// OK)
-			MvcResult result = mockMvc.perform(get("/authenticateApi").param("apiUrl", apiUrl).param("username", "user") // Correct
-																															// username
+			MvcResult result = mockMvc.perform(get("/authenticateApi")
+					.param("apiUrl", apiUrl)
+					.param("username", "user") // Correct username
 					.param("password", "password")) // Correct password
-					.andExpect(status().isOk()) // Check if the status is OK (200)
 					.andReturn(); // Capture the result
 
-			// Check if the HTTP status is OK (200)
-			statusOk = result.getResponse().getStatus() == 200;
+			int responseStatus = result.getResponse().getStatus();
 
-			// Check if the response contains "Authentication Success"
-			containsSuccessMessage = result.getResponse().getContentAsString().contains("data");
+			// Check if the HTTP status is OK (200)
+			if (responseStatus == 200) {
+				statusOk = true;
+				String responseBody = result.getResponse().getContentAsString();
+				containsSuccessMessage = responseBody.contains("data");
+			} else {
+				System.out.println("API request failed with status: " + responseStatus);
+			}
 
 		} catch (Exception ex) {
-			System.out.println("Error occurred: " + ex.getMessage());
+			System.out.println("Error occurred while sending the request: " + ex.getMessage());
 		}
 
-		// Combine all the results and pass them to yakshaAssert
 		boolean finalResult = statusOk && containsSuccessMessage;
 
-		// Use yakshaAssert to check if all assertions passed
+		// Assert test case result while handling failure scenario
+		if (!finalResult) {
+			System.out.println("Test case execution completed, but the expected API response was not received.");
+		}
+
 		yakshaAssert(currentTest(), finalResult ? "true" : "false", businessTestFile);
 	}
 
